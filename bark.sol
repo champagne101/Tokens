@@ -115,26 +115,34 @@ contract BARK is
         address to,
         uint256 amount
     ) internal override {
-
+    
         if (_isExcludedFromFees[from] || _isExcludedFromFees[to]) {
             super._transfer(from, to, amount);
             return;
         }
-
+    
         uint256 fee = 0;
-
-        if (automatedMarketMakerPairs[from] && buyTax > 0) {
-            fee = (amount * buyTax) / 100;
+        uint256 burnAmount = 0;
+        uint256 treasuryAmount = 0;
+    
+        if (automatedMarketMakerPairs[from]) {
+            fee = (amount * 3) / 100;
         }
-        else if (automatedMarketMakerPairs[to] && sellTax > 0) {
-            fee = (amount * sellTax) / 100;
+        else if (automatedMarketMakerPairs[to]) {
+            fee = (amount * 3) / 100;
         }
-
+    
         if (fee > 0) {
-            super._transfer(from, treasury, fee);
+            burnAmount = (fee * 1) / 3;        
+            treasuryAmount = fee - burnAmount; 
+    
+            super._transfer(from, address(0xdead), burnAmount);
+    
+            super._transfer(from, treasury, treasuryAmount);
+    
             amount -= fee;
         }
-
+    
         super._transfer(from, to, amount);
     }
 }
